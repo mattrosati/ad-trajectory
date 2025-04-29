@@ -1,0 +1,12 @@
+data/
+checkpoints/
+*.fdb_latexmk
+*.log
+*.pdf
+*.synctex.gz
+*.xdv
+__latexindent_temp.tex
+*.aux
+*.fls
+*.out%
+.DS_Store
