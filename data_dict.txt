@@ -1,0 +1,241 @@
+List of fields obtained from IDA/ADNI
+
+ADNI MERGE
+
+ABETA: CSF ABETA
+ABETA_bl: CSF ABETA
+ADAS11: ADAS 11
+ADAS11_bl: ADAS 11
+ADAS13: ADAS 13
+ADAS13_bl: ADAS 13
+ADASQ4: ADAS Delayed Word Recall
+ADASQ4_bl: ADAS Delayed Word Recall
+AGE: Age
+APOE4: ApoE4
+AV45: Reference region - florbetapir mean of whole cerebellum.  Regions defined by
+  Freesurfer; see Jagust lab PDF on LONI for details
+AV45_bl: Reference region - florbetapir mean of whole cerebellum.  Regions defined
+  by Freesurfer; see Jagust lab PDF on LONI for details
+CDRSB: CDR-SB
+CDRSB_bl: CDR-SB
+COLPROT: Study protocol of data collection
+DIGITSCOR: Digit Symbol Substitution
+DIGITSCOR_bl: Digit Symbol Substitution
+DX: Diagnosis
+DX_bl: Baseline Dx
+EXAMDATE: Date
+EXAMDATE_bl: Date
+EcogPtDivatt: Pt ECog - Div atten
+EcogPtDivatt_bl: Pt ECog - Div atten
+EcogPtLang: Pt ECog - Lang
+EcogPtLang_bl: Pt ECog - Lang
+EcogPtMem: Pt ECog - Mem
+EcogPtMem_bl: Pt ECog - Mem
+EcogPtOrgan: Pt ECog - Organ
+EcogPtOrgan_bl: Pt ECog - Organ
+EcogPtPlan: Pt ECog - Plan
+EcogPtPlan_bl: Pt ECog - Plan
+EcogPtTotal: Pt ECog - Total
+EcogPtTotal_bl: Pt ECog - Total
+EcogPtVisspat: Pt ECog - Vis/Spat
+EcogPtVisspat_bl: Pt ECog - Vis/Spat
+EcogSPDivatt: SP ECog - Div atten
+EcogSPDivatt_bl: SP ECog - Div atten
+EcogSPLang: SP ECog - Lang
+EcogSPLang_bl: SP ECog - Lang
+EcogSPMem: SP ECog - Mem
+EcogSPMem_bl: SP ECog - Mem
+EcogSPOrgan: SP ECog - Organ
+EcogSPOrgan_bl: SP ECog - Organ
+EcogSPPlan: SP ECog - Plan
+EcogSPPlan_bl: SP ECog - Plan
+EcogSPTotal: SP ECog - Total
+EcogSPTotal_bl: SP ECog - Total
+EcogSPVisspat: SP ECog - Vis/Spat
+EcogSPVisspat_bl: SP ECog - Vis/Spat
+Entorhinal: UCSF Entorhinal
+Entorhinal_bl: UCSF Entorhinal
+FAQ: FAQ
+FAQ_bl: FAQ
+FDG: Average FDG-PET of angular, temporal, and posterior cingulate
+FDG_bl: Average FDG-PET of angular, temporal, and posterior cingulate
+FLDSTRENG: MRI Field Strength
+FLDSTRENG_bl: MRI Field Strength
+FSVERSION: FreeSurfer Software Version
+FSVERSION_bl: FreeSurfer Software Version
+Fusiform: UCSF Fusiform
+Fusiform_bl: UCSF Fusiform
+Hippocampus: UCSF Hippocampus
+Hippocampus_bl: UCSF Hippocampus
+ICV: UCSF ICV
+ICV_bl: UCSF ICV
+LDELTOTAL: Logical Memory - Delayed Recall
+LDELTOTAL_bl: Logical Memory - Delayed Recall
+M: Month since baseline
+MMSE: MMSE
+MMSE_bl: MMSE
+MOCA: MOCA
+MOCA_bl: MOCA
+MidTemp: UCSF Med Temp
+MidTemp_bl: UCSF Med Temp
+Month: Months since baseline
+Month_bl: .nan
+ORIGPROT: Original study protocol
+PIB: Average PIB SUVR of frontal cortex, anterior cingulate, precuneus cortex, and
+  parietal cortex
+PIB_bl: Average PIB SUVR of frontal cortex, anterior cingulate, precuneus cortex,
+  and parietal cortex
+PTAU: CSF PTAU
+PTAU_bl: CSF PTAU
+PTEDUCAT: Education
+PTETHCAT: Ethnicity
+PTGENDER: Sex
+PTID: Original study protocol
+PTMARRY: Marital
+PTRACCAT: Race
+RAVLT: RAVLT (forgetting)
+RAVLT_bl: RAVLT (forgetting) at baseline
+RAVLT_forgetting: RAVLT Forgetting (trial 5 - delayed)
+RAVLT_forgetting_bl: RAVLT Forgetting (trial 5 - delayed)
+RAVLT_immediate: RAVLT Immediate (sum of 5 trials)
+RAVLT_immediate_bl: RAVLT Immediate (sum of 5 trials)
+RAVLT_learning: RAVLT Learning (trial 5 - trial 1)
+RAVLT_learning_bl: RAVLT Learning (trial 5 - trial 1)
+RAVLT_perc_forgetting: RAVLT Percent Forgetting
+RAVLT_perc_forgetting_bl: RAVLT Percent Forgetting
+RID: Participant roster ID
+SITE: Site
+TAU: CSF TAU
+TAU_bl: CSF TAU
+TRABSCOR: Trails B
+TRABSCOR_bl: Trails B
+VISCODE: Visit code
+Ventricles: UCSF Ventricles
+Ventricles_bl: UCSF Ventricles
+WholeBrain: UCSF WholeBrain
+WholeBrain_bl: UCSF WholeBrain
+Years_bl: .nan
+mPACCdigit: ADNI modified Preclinical Alzheimer's Cognitive Composite (PACC) with
+  Digit Symbol Substitution
+mPACCdigit_bl: ADNI modified Preclinical Alzheimer's Cognitive Composite (PACC) with
+  Digit Symbol Substitution
+mPACCtrailsB: ADNI modified Preclinical Alzheimer's Cognitive Composite (PACC) with
+  Trails B
+mPACCtrailsB_bl: ADNI modified Preclinical Alzheimer's Cognitive Composite (PACC)
+  with Trails B
+
+
+
+
+NOTA BENE: FROM HERE ON IS OLD, USE ADNI MERGE
+
+general
+
+subject_id: Unique ID of patient
+visit: visit code for patient. usually listed in months, though "sc" is screen and "bl" is baseline.
+RID: participant roster ID???
+VISCODE, VISCODE2: visit code, second should be more robust.  usually listed in months, though "sc" is screen and "bl" is baseline.
+EXAMDATE: date of visit
+
+
+base data
+
+NPDAGE: age at death
+NPDODYR: date of death in year
+GENOTYPE: Apoe alleles (x/x, e.g. 2/2)
+subject_age: Age at first data collection
+subject_date: date of first data collection
+MOTHDEM, FHQMOM: does mom have dementia (0: No, 1: Yes, 2: Don't Know)
+MOTHAD, FHQMOMAD: does mom have AD (0: No, 1: Yes, 2: Don't Know)
+FATHDEM, FHQDAD: does dad have dementia (0: No, 1: Yes, 2: Don't Know)
+FATHAD, FHQDADAD: does dad have AD (0: No, 1: Yes, 2: Don't Know)
+MOTHSXAGE, FATHSXAGE: age of sx start for parent (only late cohort).
+SIBDEMENT, FHQSIB: whether sibling has dementia. Can be multiple for multiple siblings.
+SIBAD, FHQSIBAD: whether sibling has AD. Can be multiple for multiple siblings.
+FHQSIB: does this patient have siblings? (only early cohort)
+SIBSXAGE: at what age did sibling's sx start (only late cohort)
+
+Merge notes: make sibling dementia status a binary yes/no sib has/does not have. could include age.
+
+
+first visit
+
+research_group: research group first assigned to patient (CN, Early/Late MCI, AD)
+subject_age: Age at first data collection
+subject_date: date of first data collection
+
+
+BL Change
+
+BCPREDX: previsit diagnosis (1: NL, 2: MCI, 3: AD)
+BCADAS: clinically relevant worsening on ADAS?
+BCMMSE: clinically relevant worsening on MMSE?
+BCFAQ: clinically relevant worsening in ADLs?
+
+
+DX Summary
+
+diagnosis: diagnosis at visit (1: NL, 2: MCI, 3: AD)
+DXCONFID: physician confidence in diagnosis at visit (1 - 4 in increasing certainty, 1 is uncertain)
+
+
+ADAS Scores, ADAS_ADNIGO23
+
+TOTALMOD: total ADAS score out of 85 points. ADNI 1
+TOTAL11: classic ADAS score out of 70 points. ADNI 1
+TOTAL13: total score ADAS 13 out of 85. ADNIGO, 2, 3.
+TOTSCORE: classic ADAS score out of 70 points. ADNIGO, 2, 3.
+
+MMSE
+
+MMSCORE: MMSE total score out of 30.
+MOCA: MOCA total score out of 30.
+
+
+BACKMEDS
+
+KEYMED: At this visit, patient is on any of the following meds? 
+0: None, 1: Aricept, 2: Cognex, 3 Exelon, 4 Namenda, 5 Razadyne, 6 Anti-depressant medication, 7 Other behavioral medication.
+
+
+VITALS (at each visit)
+
+VSWEIGHT: weight
+VSWTUNIT: weight unit. 1: lbs, 2: kg
+VSHEIGHT: height
+VSHTUNIT: height unit. 1: in, 2: cm
+VSBPSYS: systolic BP.
+VSBPDIA: diastolic BP.
+VSPULSE: HR per minute (seated).
+VSRESP: respirations per minute (seated).
+VSTEMP: temperature
+VSTMPSRC: temperature source. 1: oral, 2: tympanic, 3: other.
+VSTMPUNT: temperature unit. 1: F, 2: C
+
+Merge ideas: 
+- Convert measures with multiple units to one unit. 
+- For each temp source, normalize within each source. 
+- Can actually probably normalize all these values.
+
+
+UCBERKELEY AMY 6MM
+Centiloids: measure of amyloid beta burden 0 to 100, with 0 being healthy young controls.
+Summary SUVR: summary whole brain radioactive tracer uptake compared to low uptake standard area.
+Volume columns give volumetric estimations.
+
+Merge notes: We recommend intensity normalization using whole cerebellum for cross-sectional analyses and composite reference region for longitudinal analyses
+use eroded WM or a composite reference region, made up of whole cerebellum, brainstem, and eroded subcortical white matter for longitudinal amyloid PET analyses
+
+UCSFFSX7
+HIPPOQC: Quality control of hippocampal region. Discard data if failed or partial.
+VENTQC: Quality control of ventricular region. Discard data if failed or partial.
+General approach to columns is region code+metric code (CV: volume, SA: surface area, TA: average thickness, TS: std dev of thickness)
+ST88SV: mm3 Volume of R Hippocampus
+ST29SV: mm3 Volume of L Hippocampus
+ST96SV: mm3 Volume of R LateralVentricle
+ST89SV: mm3 Volume of R InferiorLateralVentricle
+ST37SV: mm3 Volume of L LateralVentricle
+ST30SV: mm3 Volume of L InferiorLateralVentricle
+STATUS: partial = No QC, not final. Complete = QC and finalized.
+
+UCSFFSL: same as above, more complete data but limited to ADNI1,GO,2 (about 2900 subjects)
