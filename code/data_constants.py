@@ -1,3 +1,12 @@
+
+# Constants for the data processing pipeline
+
+# unit conversion ratios
+unit_conversion = {
+    "VSHEIGHT": 0.0254,  # inches to cm
+    "VSWEIGHT": 0.453592,  # pounds to kg
+}
+
 raw_data_drop_columns = [
     "SITE",
     "FDG",
@@ -90,6 +99,8 @@ vitals_drop_columns = [
     "update_stamp",
     "VISCODE",
     "VSHGTSC",
+    "VSHEIGHT",
+    "VSHTUNIT",
 ]
 
 dtypes = {
