@@ -123,6 +123,7 @@ dtypes = {
     "PTAU": "string",  #'>120' giving problems
     "FSVERSION": "string",
     "DX": "string",
+    "DX_bl": "string",
     "FLDSTRENG_bl": "string",
     "FSVERSION_bl": "string",
     "ABETA_bl": "string",  #'>1700' giving problems
