@@ -33,11 +33,11 @@ if __name__ == "__main__":
     parser.add_argument(
         "--data_path", type=str, required=True, help="Path to the data file."
     )
-    # parser.add_argument("--output_path", type=str, required=True, help="Path to save the cleaned data.")
+    parser.add_argument("--output_path", type=str, required=False, help="Path to save the cleaned data.")
     parser.add_argument(
         "--test_size",
         type=float,
-        default=0.2,
+        default=0.1,
         help="Proportion of the dataset to include in the test split.",
     )
     parser.add_argument(
@@ -45,6 +45,12 @@ if __name__ == "__main__":
         type=str,
         required=False,
         help="Path to the vitals data file if you want to merge with ADNI db.",
+    )
+    parser.add_argument(
+        "--design_features",
+        type=bool,
+        default=False,
+        help="Whether to include design features in the output.",
     )
 
     # parse the arguments
@@ -62,6 +68,9 @@ if __name__ == "__main__":
     # drop columns that are not needed
     raw_data = raw_data.drop(columns=raw_data_drop_columns)
     print(f"Data after dropping columns, {raw_data.shape} matrix.")
+
+    # sort by date
+    raw_data = raw_data.sort_values(by=["PTID", "EXAMDATE"])
 
     # load vitals data if provided
     if args.vitals_path:
@@ -118,13 +127,61 @@ if __name__ == "__main__":
         )
         print(f"Data merged successfully, {merged_data.shape} matrix.")
 
+
     # replace problematic beta/tau values with maximum values and change to float
+    merged_data["ABETA"] = merged_data["ABETA"].replace(f"[<>]", "", regex=True).astype(float)
+    merged_data["TAU"] = merged_data["TAU"].replace(f"[<>]", "", regex=True).astype(float)   
+    merged_data["ABETA_bl"] = merged_data["ABETA"].replace(f"[<>]", "", regex=True).astype(float)
+    merged_data["TAU_bl"] = merged_data["TAU"].replace(f"[<>]", "", regex=True).astype(float)
 
-    # replace categorical data
-    # probably will use dummy encoding for categorical data, but check what tabPFN does
 
-    # split the data into training and testing sets
+    # resolving NA values in DX
+    with pd.option_context('future.no_silent_downcasting', True):
+        merged_data["DX"] = merged_data.groupby("PTID")["DX"].transform(lambda x: x.ffill())
+    merged_data["DX"] = merged_data["DX"].fillna("")
 
-    # normalize the data based on the training set
 
+    # split the data into training and testing sets by unique PTID
+    ids_dx = merged_data[["PTID", "DX"]]
+    ids_split = ids_dx.drop_duplicates(subset='PTID', keep='last')
+    train_ids, test_ids = train_test_split(
+        ids_split,
+        test_size=args.test_size,
+        random_state=SEED,
+        stratify=ids_split["DX"],
+    )
+    train_ids, val_ids = train_test_split(
+        train_ids,
+        test_size=args.test_size,
+        random_state=SEED,
+        stratify=train_ids["DX"],
+    )
+    
+    
+    # split the data into training, validation, and testing sets
+    train_data = merged_data[merged_data["PTID"].isin(train_ids["PTID"])]
+    val_data = merged_data[merged_data["PTID"].isin(val_ids["PTID"])]
+    test_data = merged_data[merged_data["PTID"].isin(test_ids["PTID"])]
+    print(f"Data split into training, validation, and testing sets, {train_data.shape}, {val_data.shape}, {test_data.shape} matrices.")
+
+    # the only transformations we want to do is if any of our fields are not approximately normally distributed. 
+    # we kind of should take a look at the distributions of the data before we decide on the transformations.
+    # print("Types of each column in the data:")
+    # print(merged_data.dtypes)
+    # for col in merged_data.columns:
+    #     if merged_data[col].dtype == "float64":
+    #         plt.hist(merged_data[col], bins=50)
+    #         plt.title(f"Distribution of {col}")
+    #         plt.xlabel(col)
+    #         plt.ylabel("Frequency")
+    #         plt.show()
+
+    
     # save the cleaned data
+    if args.output_path is not None:
+        prefix = "vit_" * args.vitals_path + "transform_" * args.design_features
+        os.makedirs(args.output_path, exist_ok=True)
+        train_data.to_csv(os.path.join(args.output_path, prefix + "train_data.csv"), index=False)
+        val_data.to_csv(os.path.join(args.output_path, prefix + "val_data.csv"), index=False)
+        test_data.to_csv(os.path.join(args.output_path, prefix + "test_data.csv"), index=False)
+        print(f"Data saved successfully to {args.output_path}.")
