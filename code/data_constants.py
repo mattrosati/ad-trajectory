@@ -134,3 +134,20 @@ dtypes = {
     "VSTMPUNT": "string",
     "VSTMPSRC": "string",
 }
+
+fields_to_transform = [
+    "ABETA",
+    "TAU",
+    "ADAS11",
+    "ADAS13",
+    "MMSE",
+    "MOCA",
+    "Ventricles",
+    "ADAS11_bl",
+    "ADAS13_bl",
+    "MMSE_bl",
+    "MOCA_bl",
+    "Ventricles_bl",
+    "ABETA_bl",
+    "TAU_bl",
+]
