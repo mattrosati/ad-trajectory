@@ -12,3 +12,5 @@ __latexindent_temp.tex
 *.aux
 *.fls
 *.out%
+
+.ipynb_checkpoints/
