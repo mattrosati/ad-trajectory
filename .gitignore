@@ -1,5 +1,8 @@
 data/
 checkpoints/
+__pycache__/
+
+.DS_Store
 *.fdb_latexmk
 *.log
 *.pdf
@@ -9,4 +12,3 @@ __latexindent_temp.tex
 *.aux
 *.fls
 *.out%
-.DS_Store
