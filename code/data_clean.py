@@ -2,6 +2,7 @@ import random
 import os
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 from argparse import ArgumentParser
 from sklearn.model_selection import train_test_split
@@ -12,6 +13,18 @@ from data_constants import *
 SEED = 42
 np.random.seed(SEED)
 random.seed(SEED)
+
+def f_to_c(temp_f):
+    """
+    Convert Fahrenheit to Celsius.
+    """
+    return (temp_f - 32) * 5.0/9.0
+
+def c_to_f(temp_c):
+    """
+    Convert Celsius to Fahrenheit.
+    """
+    return (temp_c * 9.0/5.0) + 32
 
 
 if __name__ == "__main__":
@@ -60,15 +73,50 @@ if __name__ == "__main__":
         )
 
         print(f"Vitals data loaded successfully, {vitals_data.shape} matrix.")
-        # drop columns that are not needed
+        # drop columns that are not needed. Removing height data because it is extremely low quality
         vitals_data = vitals_data.drop(columns=vitals_drop_columns)
         print(f"Vitals data after dropping columns, {vitals_data.shape} matrix.")
 
-        # merge with the main data based on (
-        # raw_data = pd.merge(raw_data, vitals_data, on="IMAGEUID", how="left")
-        # print(f"Data merged successfully, {raw_data.shape} matrix.")
+        # drop vitals data with Na visdate or viscode to merge with the main data
+        # TODO: return if we continue this project because there is likely a more complex merge that can be done to keep all data
+        vitals_data = vitals_data[vitals_data["VISDATE"].notna()]
+        vitals_data = vitals_data[vitals_data["VISCODE2"].notna()]
 
-    # convert units to SI units
+
+        # convert units to SI units
+        # drop data if units are NA or temp source is NA
+        vitals_data = vitals_data[vitals_data["VSTMPSRC"].notna()]
+        vitals_data = vitals_data[vitals_data["VSWTUNIT"].notna()]
+        vitals_data = vitals_data[vitals_data["VSTMPUNT"].notna()]
+
+        # drop rows with zero temperature
+        vitals_data = vitals_data[vitals_data["VSTEMP"] > 20]
+        print(f"Vitals data after dropping rows with NA units, {vitals_data.shape} matrix.")
+
+        # correct mislabeled data
+        vitals_data["VSTMPUNT"] = vitals_data.apply(lambda x: "1" if x["VSTEMP"] > 50 else x["VSTMPUNT"], axis=1)
+        vitals_data["VSTMPUNT"] = vitals_data.apply(lambda x: "2" if x["VSTEMP"] < 50 else x["VSTMPUNT"], axis=1)
+
+        # converting 
+        vitals_data["VSWEIGHT"] = vitals_data.apply(lambda x: x["VSWEIGHT"] * unit_conversion["VSWEIGHT"] if x["VSWTUNIT"] == "1" else x["VSWEIGHT"], axis=1)
+        vitals_data["VSTEMP"] = vitals_data.apply(lambda x: f_to_c(x["VSTEMP"]) if (x["VSTMPUNT"] == "1" and x["VSTEMP"] > 50) else x["VSTEMP"], axis=1)
+        
+        # drop rows with out of liveable range temperature
+        vitals_data = vitals_data[vitals_data["VSTEMP"] > 25]
+        vitals_data = vitals_data[vitals_data["VSWEIGHT"] > 10]
+
+        print(f"Vitals data after converting units and dropping nonsense, {vitals_data.shape} matrix.")
+
+        # merge with the main data based on (PTID, VISDATE)
+        merged_data = pd.merge(
+            raw_data,
+            vitals_data,
+            left_on=["PTID", "VISCODE"],
+            right_on=["PTID", "VISCODE2"],
+            how="left",
+            validate="one_to_one",
+        )
+        print(f"Data merged successfully, {merged_data.shape} matrix.")
 
     # replace problematic beta/tau values with maximum values and change to float
 
