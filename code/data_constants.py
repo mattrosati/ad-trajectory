@@ -101,11 +101,13 @@ vitals_drop_columns = [
     "VSHGTSC",
     "VSHEIGHT",
     "VSHTUNIT",
+    "RID"
 ]
 
 dtypes = {
     "RID": "string",
     "COLPROT": "string",
+    "APOE4": "string",
     "ORIGPROT": "string",
     "PTID": "string",
     "VISCODE": "string",
