@@ -3,9 +3,13 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from sklearn.preprocessing import PowerTransformer
 
 from argparse import ArgumentParser
 from sklearn.model_selection import train_test_split
+from scipy.stats import shapiro
+import joblib
+
 
 from data_constants import *
 
@@ -26,6 +30,14 @@ def c_to_f(temp_c):
     """
     return (temp_c * 9.0/5.0) + 32
 
+def distribution_transform(data, method="yeo-johnson"):
+    """
+    Apply the Yeo-Johnson transformation or log to the given data.
+    """
+    pt = PowerTransformer(method=method)
+    transformed_data = pt.fit_transform(data)
+    return transformed_data
+
 
 if __name__ == "__main__":
     # initialize the argument parser
@@ -44,13 +56,14 @@ if __name__ == "__main__":
         "--vitals_path",
         type=str,
         required=False,
+        default=None,
         help="Path to the vitals data file if you want to merge with ADNI db.",
     )
     parser.add_argument(
         "--design_features",
-        type=bool,
-        default=False,
-        help="Whether to include design features in the output.",
+        type=str,
+        default=None,
+        help="How to design features in the output. Can be 'log' or 'yeo-johnson'.",
     )
 
     # parse the arguments
@@ -126,6 +139,9 @@ if __name__ == "__main__":
             validate="one_to_one",
         )
         print(f"Data merged successfully, {merged_data.shape} matrix.")
+    else:
+        # merge with the main data based on (PTID, VISDATE)
+        merged_data = raw_data
 
 
     # replace problematic beta/tau values with maximum values and change to float
@@ -156,32 +172,66 @@ if __name__ == "__main__":
         random_state=SEED,
         stratify=train_ids["DX"],
     )
+
+    if args.design_features:
+        # switch MOCA and MMSE to right skew
+        merged_data["MMSE"] = 30 - merged_data["MMSE"]
+        merged_data["MOCA"] = 30 - merged_data["MOCA"]
+        merged_data["MMSE_bl"] = 30 - merged_data["MMSE_bl"]
+        merged_data["MOCA_bl"] = 30 - merged_data["MOCA_bl"]
+
+    if args.design_features == "log":
+        # select the columns to apply the tranformation to
+        data_to_transform = merged_data[fields_to_transform]
+        # apply log transformation to the features
+        merged_data[fields_to_transform] = np.log1p(merged_data[fields_to_transform])
     
     
     # split the data into training, validation, and testing sets
-    train_data = merged_data[merged_data["PTID"].isin(train_ids["PTID"])]
-    val_data = merged_data[merged_data["PTID"].isin(val_ids["PTID"])]
-    test_data = merged_data[merged_data["PTID"].isin(test_ids["PTID"])]
+    train_data = merged_data[merged_data["PTID"].isin(train_ids["PTID"])].copy()
+    val_data = merged_data[merged_data["PTID"].isin(val_ids["PTID"])].copy()
+    test_data = merged_data[merged_data["PTID"].isin(test_ids["PTID"])].copy()
     print(f"Data split into training, validation, and testing sets, {train_data.shape}, {val_data.shape}, {test_data.shape} matrices.")
 
-    # the only transformations we want to do is if any of our fields are not approximately normally distributed. 
-    # we kind of should take a look at the distributions of the data before we decide on the transformations.
-    # print("Types of each column in the data:")
-    # print(merged_data.dtypes)
-    # for col in merged_data.columns:
-    #     if merged_data[col].dtype == "float64":
-    #         plt.hist(merged_data[col], bins=50)
+
+    if args.design_features == "yeo-johnson":
+        # apply Yeo-Johnson transformation to the features
+        pt = PowerTransformer(method='yeo-johnson')
+        tr_train_data = pt.fit_transform(train_data[fields_to_transform])
+        tr_val_data = pt.transform(val_data[fields_to_transform])
+        tr_test_data = pt.transform(test_data[fields_to_transform])
+        train_data[fields_to_transform] = pd.DataFrame(tr_train_data, columns=pt.get_feature_names_out(), index=train_data.index)
+        val_data[fields_to_transform] = pd.DataFrame(tr_val_data, columns=pt.get_feature_names_out(), index=val_data.index)
+        test_data[fields_to_transform] = pd.DataFrame(tr_test_data, columns=pt.get_feature_names_out(), index=test_data.index)
+
+    # verify normality by statistical test and visual inspection
+    # for col in val_data[fields_to_transform].columns:
+    #     stat, p = shapiro(val_data[col], nan_policy='omit')
+    #     print(col + ": " + "p-value =", p)
+    
+    
+    # for col in val_data.columns:
+    #     if val_data[col].dtype == "float64":
+    #         plt.hist(val_data[col], bins=20)
     #         plt.title(f"Distribution of {col}")
     #         plt.xlabel(col)
     #         plt.ylabel("Frequency")
     #         plt.show()
 
+
     
     # save the cleaned data
     if args.output_path is not None:
-        prefix = "vit_" * args.vitals_path + "transform_" * args.design_features
+        design_feature_string = args.design_features + "_" if args.design_features else ""
+        vitals_string = "vitals_" if args.vitals_path else ""
+        prefix = vitals_string + design_feature_string
         os.makedirs(args.output_path, exist_ok=True)
         train_data.to_csv(os.path.join(args.output_path, prefix + "train_data.csv"), index=False)
         val_data.to_csv(os.path.join(args.output_path, prefix + "val_data.csv"), index=False)
         test_data.to_csv(os.path.join(args.output_path, prefix + "test_data.csv"), index=False)
         print(f"Data saved successfully to {args.output_path}.")
+
+        if args.design_features == "yeo-johnson":
+            # save the transformer
+            joblib.dump(pt, os.path.join(args.output_path, "yeo-johnson_transformer.pkl"))
+            print(f"Transformer saved successfully to {args.output_path}.")
