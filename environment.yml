@@ -268,4 +268,3 @@ dependencies:
       - slicer==0.0.8
       - sympy==1.13.1
       - tabpfn-extensions==0.1.0
-prefix: /Users/matteorosati/anaconda3/envs/ad_traj

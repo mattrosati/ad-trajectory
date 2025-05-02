@@ -1,0 +1,4 @@
+python ./src/data_clean.py --data_path ~/palmer_scratch/adni/raw_data.nosync/ADNIMERGE/ADNIMERGE_30Apr2025.csv --vitals_path data/raw_data.nosync/All_Subjects_VITALS_29Apr2025.csv --design_features 'log'  --output_path data/processed/
+python ./src/data_clean.py --data_path ~/palmer_scratch/adni/raw_data.nosync/ADNIMERGE/ADNIMERGE_30Apr2025.csv --vitals_path data/raw_data.nosync/All_Subjects_VITALS_29Apr2025.csv --design_features 'yeo-johnson'  --output_path data/processed/
+python ./src/data_clean.py --data_path ~/palmer_scratch/adni/raw_data.nosync/ADNIMERGE/ADNIMERGE_30Apr2025.csv --vitals_path data/raw_data.nosync/All_Subjects_VITALS_29Apr2025.csv --output_path data/processed/
+python ./src/data_clean.py --data_path ~/palmer_scratch/adni/raw_data.nosync/ADNIMERGE/ADNIMERGE_30Apr2025.csv --output_path data/processed/
