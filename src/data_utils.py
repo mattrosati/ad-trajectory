@@ -2,6 +2,7 @@ from data_constants import *
 import numpy as np
 import pandas as pd
 
+
 def find_duplicate_columns_by_content(df):
     duplicates = {}
     columns = df.columns
@@ -11,9 +12,10 @@ def find_duplicate_columns_by_content(df):
                 duplicates.setdefault(columns[i], []).append(columns[j])
     return duplicates
 
+
 def load_data_for_tabPFN(file_path):
     """
-    Load the data from a CSV file and preps for input to TabPFN. 
+    Load the data from a CSV file and preps for input to TabPFN.
     Parses the date columns and sets the data types for each column.
     Cuts any data without target values.
     Drops ID columns that should not be inputed in data.
@@ -21,7 +23,7 @@ def load_data_for_tabPFN(file_path):
     """
     data = pd.read_csv(file_path, dtype=dtypes, parse_dates=["EXAMDATE", "EXAMDATE_bl"])
 
-    for col in data.select_dtypes(include='datetime'):
+    for col in data.select_dtypes(include="datetime"):
         data[col] = data[col].astype(str)
 
     # drop rows that do not have target values
@@ -32,6 +34,6 @@ def load_data_for_tabPFN(file_path):
     data = data.reset_index(drop=True)
     ids = pd.DataFrame(data["PTID"], columns=["PTID"]).reset_index()
 
-    data = data.drop(columns = id_columns)
+    data = data.drop(columns=id_columns)
 
     return data, ids

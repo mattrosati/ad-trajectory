@@ -1,4 +1,3 @@
-
 # Constants for the data processing pipeline
 # TODO: consider moving these to a config file/yaml file
 
@@ -88,7 +87,7 @@ raw_data_drop_columns = [
     "FBB_bl",
     "update_stamp",
     "M",
-    "Month"
+    "Month",
 ]
 
 vitals_drop_columns = [
@@ -156,14 +155,7 @@ fields_to_transform = [
     "TAU_bl",
 ]
 
-targets = [
-    "MMSE",
-    "MOCA",
-    "ADAS11",
-    "ADAS13",
-    "Ventricles",
-    "DX"
-]
+targets = ["MMSE", "MOCA", "ADAS11", "ADAS13", "Ventricles", "DX"]
 
 id_columns = [
     "RID",
