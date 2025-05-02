@@ -16,7 +16,7 @@ module load miniconda
 cd /home/mr2238/ad-trajectory/
 
 # Install the required packages
-conda create -f ~/ad-trajectory/environment.yml -n ad_traj
+mamba env create -f ~/ad-trajectory/environment.yml
 
 conda activate ad_traj
 bash ./scripts/clean.sh
