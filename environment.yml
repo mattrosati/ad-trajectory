@@ -13,7 +13,8 @@ dependencies:
   - annotated-types=0.6.0
   - anyio=4.7.0
   - appdirs=1.4.4
-  - appnope=0.1.2
+  # uncomment if on Mac
+  # - appnope=0.1.2
   - argon2-cffi=21.3.0
   - argon2-cffi-bindings=21.2.0
   - arrow-cpp=19.0.0
@@ -117,7 +118,8 @@ dependencies:
   - libev=4.33
   - libevent=2.1.12
   - libffi=3.4.4
-  - libgfortran=5.0.0
+  # uncomment if on Mac
+  # - libgfortran=5.0.0
   - libgfortran5=11.3.0
   - libgrpc=1.71.0
   - libiconv=1.16
