@@ -66,7 +66,7 @@ FSVERSION_bl: FreeSurfer Software Version
 Fusiform: UCSF Fusiform
 Fusiform_bl: UCSF Fusiform
 Hippocampus: UCSF Hippocampus
-Hippocampus_bl: UCSF Hippocampus
+Hippocampus_bl: UCSF Hippocampus baseline
 ICV: UCSF ICV
 ICV_bl: UCSF ICV
 LDELTOTAL: Logical Memory - Delayed Recall
@@ -111,7 +111,7 @@ TRABSCOR: Trails B
 TRABSCOR_bl: Trails B
 VISCODE: Visit code
 Ventricles: UCSF Ventricles
-Ventricles_bl: UCSF Ventricles
+Ventricles_bl: UCSF Ventricles baseline
 WholeBrain: UCSF WholeBrain
 WholeBrain_bl: UCSF WholeBrain
 Years_bl: .nan
