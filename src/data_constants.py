@@ -1,5 +1,6 @@
 
 # Constants for the data processing pipeline
+# TODO: consider moving these to a config file/yaml file
 
 # unit conversion ratios
 unit_conversion = {
@@ -86,6 +87,8 @@ raw_data_drop_columns = [
     "AV45_bl",
     "FBB_bl",
     "update_stamp",
+    "M",
+    "Month"
 ]
 
 vitals_drop_columns = [
@@ -101,7 +104,7 @@ vitals_drop_columns = [
     "VSHGTSC",
     "VSHEIGHT",
     "VSHTUNIT",
-    "RID"
+    "RID",
 ]
 
 dtypes = {
@@ -151,4 +154,21 @@ fields_to_transform = [
     "Ventricles_bl",
     "ABETA_bl",
     "TAU_bl",
+]
+
+targets = [
+    "MMSE",
+    "MOCA",
+    "ADAS11",
+    "ADAS13",
+    "Ventricles",
+    "DX"
+]
+
+id_columns = [
+    "RID",
+    "PTID",
+    "VISCODE",
+    "COLPROT",
+    "ORIGPROT",
 ]

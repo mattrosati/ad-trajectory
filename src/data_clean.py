@@ -12,11 +12,7 @@ import joblib
 
 
 from data_constants import *
-
-# Set the random seed for reproducibility
-SEED = 42
-np.random.seed(SEED)
-random.seed(SEED)
+from data_utils import find_duplicate_columns_by_content
 
 def f_to_c(temp_f):
     """
@@ -65,9 +61,20 @@ if __name__ == "__main__":
         default=None,
         help="How to design features in the output. Can be 'log' or 'yeo-johnson'.",
     )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help="Random seed for reproducibility.",
+    )
 
     # parse the arguments
     args = parser.parse_args()
+
+    # Set the random seed for reproducibility
+    s = args.seed
+    np.random.seed(s)
+    random.seed(s)
 
     # load the data
     raw_data = pd.read_csv(
@@ -147,10 +154,14 @@ if __name__ == "__main__":
     # replace problematic beta/tau values with maximum values and change to float
     merged_data["ABETA"] = merged_data["ABETA"].replace(f"[<>]", "", regex=True).astype(float)
     merged_data["TAU"] = merged_data["TAU"].replace(f"[<>]", "", regex=True).astype(float)   
-    merged_data["ABETA_bl"] = merged_data["ABETA"].replace(f"[<>]", "", regex=True).astype(float)
-    merged_data["TAU_bl"] = merged_data["TAU"].replace(f"[<>]", "", regex=True).astype(float)
+    merged_data["ABETA_bl"] = merged_data["ABETA_bl"].replace(f"[<>]", "", regex=True).astype(float)
+    merged_data["TAU_bl"] = merged_data["TAU_bl"].replace(f"[<>]", "", regex=True).astype(float)
 
-
+    # Usage
+    duplicates = find_duplicate_columns_by_content(merged_data)
+    for key, vals in duplicates.items():
+        print(f"{key} is identical to: {', '.join(vals)}")
+    
     # resolving NA values in DX
     with pd.option_context('future.no_silent_downcasting', True):
         merged_data["DX"] = merged_data.groupby("PTID")["DX"].transform(lambda x: x.ffill())
@@ -163,13 +174,13 @@ if __name__ == "__main__":
     train_ids, test_ids = train_test_split(
         ids_split,
         test_size=args.test_size,
-        random_state=SEED,
+        random_state=s,
         stratify=ids_split["DX"],
     )
     train_ids, val_ids = train_test_split(
         train_ids,
         test_size=args.test_size,
-        random_state=SEED,
+        random_state=s,
         stratify=train_ids["DX"],
     )
 
@@ -218,7 +229,7 @@ if __name__ == "__main__":
     #         plt.ylabel("Frequency")
     #         plt.show()
 
-
+    print("Columns in train data: ", train_data.columns)
     
     # save the cleaned data
     if args.output_path is not None:
