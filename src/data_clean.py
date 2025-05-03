@@ -9,6 +9,9 @@ from argparse import ArgumentParser
 from sklearn.model_selection import train_test_split
 from scipy.stats import shapiro
 import joblib
+from tabpfn.constants import (
+    NA_PLACEHOLDER,
+)
 
 
 from data_constants import *
@@ -203,7 +206,12 @@ if __name__ == "__main__":
         merged_data["DX"] = merged_data.groupby("PTID")["DX"].transform(
             lambda x: x.ffill()
         )
-    merged_data["DX"] = merged_data["DX"].fillna("")
+    
+    # for all string fields, replace with tabPFN placeholder
+    categoricals = merged_data.select_dtypes(include=["string", "object"]).columns
+    if len(categoricals) > 0:
+        merged_data = merged_data.copy()
+        merged_data[categoricals] = merged_data[categoricals].fillna(NA_PLACEHOLDER)
 
     # split the data into training and testing sets by unique PTID
     ids_dx = merged_data[["PTID", "DX"]]
@@ -220,7 +228,6 @@ if __name__ == "__main__":
         random_state=s,
         stratify=train_ids["DX"],
     )
-    merged_data["DX"] = merged_data["DX"].replace("", pd.NA)
 
     if args.design_features:
         # switch MOCA and MMSE to right skew
