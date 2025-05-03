@@ -9,9 +9,9 @@ import random
 from tqdm import tqdm
 import warnings
 
-warnings.simplefilter("error")
+# warnings.simplefilter("error")
 
-from data_utils import load_data_for_tabPFN
+from data_utils import load_data_for_tabPFN, get_embeddings
 from data_constants import targets
 
 if __name__ == "__main__":
@@ -90,7 +90,8 @@ if __name__ == "__main__":
 
                 # fit the model on the data with kfolds if it is training data, with the whole train set if it is val/test data
                 if "train" in f:
-                    v = embedding.get_embeddings(
+                    v = get_embeddings(
+                        embedding,
                         X_train=x.to_numpy(),
                         y_train=y[t].to_numpy(),
                         X=None,
@@ -106,18 +107,23 @@ if __name__ == "__main__":
                     )
                     train_x = train_data.drop(columns=targets)
                     train_y = train_data[targets]
-                    v = embedding.get_embeddings(
+                    v = get_embeddings(
+                        embedding,
                         X_train=train_x.to_numpy(),
                         y_train=train_y[t].to_numpy(),
                         X=x.to_numpy(),
                         data_source="test",
-                    ) # shape is n_estimators, n_samples, n_features
+                    )  # shape is n_estimators, n_samples, n_features
                 v_averaged = np.mean(v, axis=0)
                 vecs.append(v_averaged)
                 print(f"Shape of the embeddings for {t}: {v.shape}")
             vecs = np.concatenate(vecs, axis=1)
             print(f"Shape of the embeddings: {vecs.shape}")
-            to_save = np.concatenate((ids["PTID"].to_numpy(), vecs), axis=1)
+            to_save = pd.DataFrame(vecs)
+            to_save.insert(0, "PTID", ids["PTID"])
 
         # save the embeddings to a CSV file
         save_path = os.path.join(args.save_dir, f.replace(".csv", "_embeddings.csv"))
+        os.makedirs(args.save_dir, exist_ok=True)
+        to_save.to_csv(save_path, index=False)
+        # print(f"Saved embeddings to {save_path}")

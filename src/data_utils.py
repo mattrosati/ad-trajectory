@@ -2,6 +2,9 @@ from data_constants import *
 import numpy as np
 import pandas as pd
 
+from tabpfn_extensions import TabPFNRegressor, TabPFNClassifier
+from tabpfn_extensions.embedding import TabPFNEmbedding
+
 
 def find_duplicate_columns_by_content(df):
     duplicates = {}
@@ -21,13 +24,11 @@ def load_data_for_tabPFN(file_path):
     Drops ID columns that should not be inputed in data.
     Returns the data as a pandas DataFrame and the patient IDs by index in new df.
     """
-    data = pd.read_csv(file_path, 
-                       parse_dates=["EXAMDATE", "EXAMDATE_bl"]
-                    )
+    data = pd.read_csv(file_path, parse_dates=["EXAMDATE", "EXAMDATE_bl"])
 
     for col in data.select_dtypes(include="object"):
         data[col] = data[col].astype("string")
-    
+
     # drop rows that do not have target values
     for t in targets:
         data = data[data[t].notna()]
@@ -37,8 +38,103 @@ def load_data_for_tabPFN(file_path):
 
     # convert date columns to floats
     for col in data.select_dtypes(include="datetime"):
-        data[col] = (data[col] - pd.Timestamp("1970-01-01")).dt.total_seconds() / (60 * 60 * 24) # converting to days since 1970
+        data[col] = (data[col] - pd.Timestamp("1970-01-01")).dt.total_seconds() / (
+            60 * 60 * 24
+        )  # converting to days since 1970
 
     data = data.drop(columns=id_columns)
 
     return data, ids
+
+
+def _get_embed_wrapper(
+    model: TabPFNEmbedding,
+    X_train,
+    X,
+    data_source: str,
+):
+    categoricals = [col for col in range(X_train.shape[1]) if any(isinstance(x, str) for x in X_train[:, col])]
+    known = [set(np.unique(X_train[:, col])) for col in categoricals]
+
+    known = {col: set(np.unique(X_train[:, col])) for col in categoricals}
+
+    col_masks = np.column_stack([
+        np.isin(X[:, col], list(known[col])) if col in categoricals else np.full(X.shape[0], True)
+        for col in range(X.shape[1])
+    ])
+
+    unknown_mask = ~col_masks
+
+    X = X.copy()
+    X[unknown_mask] = "NA"
+
+    return model.model.get_embeddings(X, data_source=data_source)
+
+
+def _add_unknown_row(X_train, y_train):
+    # Add a dummy row with unknown values to the training set
+    dummy_row = X_train[0].copy()
+    for i in range(X_train.shape[1]):
+        if isinstance(X_train[0, i], str):
+            dummy_row[i] = "NA"
+
+    X_train = np.vstack([X_train, dummy_row])
+    y_train = np.append(y_train, y_train[0])
+    return X_train, y_train
+
+
+def get_embeddings(
+    model: TabPFNEmbedding,
+    X_train: np.ndarray,
+    y_train: np.ndarray,
+    X: np.ndarray,
+    data_source: str,
+) -> np.ndarray:
+    """Extracts embeddings for the given dataset using the trained model.
+    This is my own version because I want to check if the test set has categories the model has never seen before and fix it.
+
+    Args:
+        X_train (np.ndarray): Training feature data.
+        y_train (np.ndarray): Training target labels.
+        X (np.ndarray): Data for which embeddings are to be extracted.
+        data_source (str): Specifies the data source ("test" for test data).
+
+    Returns:
+        np.ndarray: The extracted embeddings.
+
+    Raises:
+        ValueError: If no model is set before calling get_embeddings.
+
+    """
+    if model.model is None:
+        raise ValueError("No model has been set.")
+
+    # If no cross-validation is used, train and return embeddings directly
+
+    if model.n_fold == 0:
+        X_train, y_train = _add_unknown_row(X_train, y_train)
+        model.model.fit(X_train, y_train)
+        return _get_embed_wrapper(model, X_train, X, data_source=data_source)
+    elif model.n_fold >= 2:
+        if data_source == "test":
+            X_train, y_train = _add_unknown_row(X_train, y_train)
+            model.model.fit(X_train, y_train)
+            return _get_embed_wrapper(model, X_train, X, data_source=data_source)
+        else:
+            from sklearn.model_selection import KFold
+
+            kf = KFold(n_splits=model.n_fold, shuffle=False)
+            embeddings = []
+            for train_index, val_index in kf.split(X_train):
+                X_train_fold, X_val_fold = X_train[train_index], X_train[val_index]
+                y_train_fold, _y_val_fold = y_train[train_index], y_train[val_index]
+                X_train_fold, y_train_fold = _add_unknown_row(X_train_fold, y_train_fold)
+                model.model.fit(X_train_fold, y_train_fold)
+                embeddings.append(
+                    _get_embed_wrapper(
+                        model, X_train_fold, X_val_fold, data_source=data_source
+                    ),
+                )
+            return np.concatenate(embeddings, axis=1)
+    else:
+        raise ValueError("n_fold must be greater than 1.")
