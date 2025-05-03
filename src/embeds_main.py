@@ -50,13 +50,13 @@ if __name__ == "__main__":
     random.seed(s)
 
     # load the dataset
+    # set the number of ensembles to 8 for both regression and classification
     for f in os.listdir(args.load_dir):
         if f.endswith(".csv"):
             data, ids = load_data_for_tabPFN(os.path.join(args.load_dir, f))
             print(f"Loaded data from {f}")
 
             # fit the model and extract the embeddings
-
             y = data[targets]
             x = data.drop(columns=targets)
             vecs = []
@@ -111,9 +111,9 @@ if __name__ == "__main__":
                         y_train=train_y[t].to_numpy(),
                         X=x.to_numpy(),
                         data_source="test",
-                    )
-
-                vecs.append(v)
+                    ) # shape is n_estimators, n_samples, n_features
+                v_averaged = np.mean(v, axis=0)
+                vecs.append(v_averaged)
                 print(f"Shape of the embeddings for {t}: {v.shape}")
             vecs = np.concatenate(vecs, axis=1)
             print(f"Shape of the embeddings: {vecs.shape}")
