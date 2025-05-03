@@ -179,7 +179,6 @@ if __name__ == "__main__":
     else:
         merged_data = raw_data
 
-        
     # replace problematic beta/tau values with maximum values and change to float
     merged_data["ABETA"] = (
         merged_data["ABETA"].replace(f"[<>]", "", regex=True).astype(float)
@@ -205,8 +204,6 @@ if __name__ == "__main__":
             lambda x: x.ffill()
         )
     merged_data["DX"] = merged_data["DX"].fillna("")
-
-
 
     # split the data into training and testing sets by unique PTID
     ids_dx = merged_data[["PTID", "DX"]]
@@ -273,7 +270,6 @@ if __name__ == "__main__":
     #         plt.xlabel(col)
     #         plt.ylabel("Frequency")
     #         plt.show()
-
 
     print("Columns in train data: ", train_data.columns)
 

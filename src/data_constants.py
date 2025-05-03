@@ -165,6 +165,4 @@ id_columns = [
     "ORIGPROT",
 ]
 
-final_drop_columns = [
-    'VISCODE2', 'VISDATE'
-]
+final_drop_columns = ["VISCODE2", "VISDATE"]
