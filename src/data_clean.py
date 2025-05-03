@@ -176,6 +176,11 @@ if __name__ == "__main__":
         # merge with the main data based on (PTID, VISDATE)
         merged_data = raw_data
 
+    # cut granularity in MCI for DX
+    merged_data["DX"] = merged_data["DX"].replace(
+        f"[.]*MCI[.]*", "MCI", regex=True
+    )
+
     # replace problematic beta/tau values with maximum values and change to float
     merged_data["ABETA"] = (
         merged_data["ABETA"].replace(f"[<>]", "", regex=True).astype(float)
@@ -190,7 +195,7 @@ if __name__ == "__main__":
         merged_data["TAU_bl"].replace(f"[<>]", "", regex=True).astype(float)
     )
 
-    # Usage
+    # Check any duplicated columns
     duplicates = find_duplicate_columns_by_content(merged_data)
     for key, vals in duplicates.items():
         print(f"{key} is identical to: {', '.join(vals)}")
