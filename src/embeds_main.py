@@ -8,8 +8,14 @@ import numpy as np
 import random
 from tqdm import tqdm
 import warnings
+warnings.filterwarnings(
+    "ignore",
+    category=UserWarning,
+    message=r"Found unknown categories*"
+)
 
-# warnings.simplefilter("error")
+
+# from tabpfn.config import ModelInterfaceConfig # uncomment this if config necessary
 
 from data_utils import load_data_for_tabPFN, get_embeddings
 from data_constants import targets
@@ -49,8 +55,14 @@ if __name__ == "__main__":
     np.random.seed(s)
     random.seed(s)
 
+    # config = ModelInterfaceConfig(
+    #     FEATURE_SHIFT_METHOD = None,
+    #     CLASS_SHIFT_METHOD = None
+    # ) # comment this out
+    # categorical_features = [0,2,4,6,7,8]
+
     # load the dataset
-    # set the number of ensembles to 8 for both regression and classification
+    # average ensembles before concat
     for f in os.listdir(args.load_dir):
         if f.endswith(".csv"):
             data, ids = load_data_for_tabPFN(os.path.join(args.load_dir, f))
@@ -80,11 +92,17 @@ if __name__ == "__main__":
                 # if the target is a classification task, use TabPFNClassifier
                 # if the target is a regression task, use TabPFNRegressor
                 if t == "DX":
-                    clf = TabPFNClassifier(random_state=s)
+                    clf = TabPFNClassifier(random_state=s, 
+                        # inference_config=config, 
+                        # categorical_features_indices=categorical_features
+                        )
                     clf.feature_names_in_ = x.columns
                     embedding = TabPFNEmbedding(tabpfn_clf=clf, n_fold=args.kfolds)
                 else:
-                    reg = TabPFNRegressor(random_state=s)
+                    reg = TabPFNRegressor(random_state=s, 
+                        # inference_config=config, 
+                        # categorical_features_indices=categorical_features
+                        )
                     reg.feature_names_in_ = x.columns
                     embedding = TabPFNEmbedding(tabpfn_reg=reg, n_fold=args.kfolds)
 
@@ -92,8 +110,8 @@ if __name__ == "__main__":
                 if "train" in f:
                     v = get_embeddings(
                         embedding,
-                        X_train=x.to_numpy(),
-                        y_train=y[t].to_numpy(),
+                        X_train=x,
+                        y_train=y[t],
                         X=None,
                         data_source="train",
                     )
@@ -109,9 +127,9 @@ if __name__ == "__main__":
                     train_y = train_data[targets]
                     v = get_embeddings(
                         embedding,
-                        X_train=train_x.to_numpy(),
-                        y_train=train_y[t].to_numpy(),
-                        X=x.to_numpy(),
+                        X_train=train_x,
+                        y_train=train_y[t],
+                        X=x,
                         data_source="test",
                     )  # shape is n_estimators, n_samples, n_features
                 v_averaged = np.mean(v, axis=0)
@@ -122,8 +140,8 @@ if __name__ == "__main__":
             to_save = pd.DataFrame(vecs)
             to_save.insert(0, "PTID", ids["PTID"])
 
-        # save the embeddings to a CSV file
-        save_path = os.path.join(args.save_dir, f.replace(".csv", "_embeddings.csv"))
-        os.makedirs(args.save_dir, exist_ok=True)
-        to_save.to_csv(save_path, index=False)
-        # print(f"Saved embeddings to {save_path}")
+            # save the embeddings to a CSV file
+            save_path = os.path.join(args.save_dir, f.replace(".csv", "_embeddings.csv"))
+            os.makedirs(args.save_dir, exist_ok=True)
+            to_save.to_csv(save_path, index=False)
+            print(f"Saved embeddings to {save_path}")
