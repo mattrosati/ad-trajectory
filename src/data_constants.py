@@ -104,6 +104,7 @@ vitals_drop_columns = [
     "VSHEIGHT",
     "VSHTUNIT",
     "RID",
+    "PHASE",
 ]
 
 dtypes = {
@@ -159,8 +160,11 @@ targets = ["MMSE", "MOCA", "ADAS11", "ADAS13", "Ventricles", "DX"]
 
 id_columns = [
     "RID",
-    "PTID",
     "VISCODE",
     "COLPROT",
     "ORIGPROT",
+]
+
+final_drop_columns = [
+    'VISCODE2', 'VISDATE'
 ]

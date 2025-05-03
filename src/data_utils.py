@@ -21,18 +21,21 @@ def load_data_for_tabPFN(file_path):
     Drops ID columns that should not be inputed in data.
     Returns the data as a pandas DataFrame and the patient IDs by index in new df.
     """
-    data = pd.read_csv(file_path, dtype=dtypes, parse_dates=["EXAMDATE", "EXAMDATE_bl"])
-
-    for col in data.select_dtypes(include="datetime"):
-        data[col] = data[col].astype(str)
+    data = pd.read_csv(file_path, 
+                       # dtype=dtypes, 
+                       parse_dates=["EXAMDATE", "EXAMDATE_bl"]
+                    )
 
     # drop rows that do not have target values
     for t in targets:
         data = data[data[t].notna()]
     print(f"Data after dropping rows with NA target values, {data.shape} matrix.")
     print(f"Unique patient IDs in the data: {data['PTID'].nunique()}")
-    data = data.reset_index(drop=True)
-    ids = pd.DataFrame(data["PTID"], columns=["PTID"]).reset_index()
+    ids = pd.DataFrame(data["PTID"], columns=["PTID"])
+
+    # convert date columns to floats
+    for col in data.select_dtypes(include="datetime"):
+        data[col] = (data[col] - pd.Timestamp("1970-01-01")).dt.total_seconds() / (60 * 60 * 24) # converting to days since 1970
 
     data = data.drop(columns=id_columns)
 

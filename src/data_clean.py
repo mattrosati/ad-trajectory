@@ -171,9 +171,12 @@ if __name__ == "__main__":
             how="left",
             validate="one_to_one",
         )
+
+        # final column drop
+        merged_data = merged_data.drop(columns=final_drop_columns)
+
         print(f"Data merged successfully, {merged_data.shape} matrix.")
     else:
-        # merge with the main data based on (PTID, VISDATE)
         merged_data = raw_data
 
     # cut granularity in MCI for DX
@@ -206,6 +209,8 @@ if __name__ == "__main__":
             lambda x: x.ffill()
         )
     merged_data["DX"] = merged_data["DX"].fillna("")
+
+
 
     # split the data into training and testing sets by unique PTID
     ids_dx = merged_data[["PTID", "DX"]]
@@ -272,6 +277,7 @@ if __name__ == "__main__":
     #         plt.xlabel(col)
     #         plt.ylabel("Frequency")
     #         plt.show()
+
 
     print("Columns in train data: ", train_data.columns)
 
