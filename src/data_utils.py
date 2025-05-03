@@ -4,6 +4,18 @@ import pandas as pd
 
 from tabpfn_extensions import TabPFNRegressor, TabPFNClassifier
 from tabpfn_extensions.embedding import TabPFNEmbedding
+from tabpfn.constants import (
+    NA_PLACEHOLDER,
+)
+import typing
+import torch
+from typing import Iterator
+
+# import to figure out what is going on with the data
+from tabpfn.utils import validate_X_predict, _fix_dtypes, _process_text_na_dataframe
+
+from tabpfn.config import ModelInterfaceConfig
+from tabpfn.preprocessing import EnsembleConfig
 
 
 def find_duplicate_columns_by_content(df):
@@ -53,43 +65,46 @@ def _get_embed_wrapper(
     X,
     data_source: str,
 ):
-    categoricals = [
-        col
-        for col in range(X_train.shape[1])
-        if any(isinstance(x, str) for x in X_train[:, col])
-    ]
-    known = [set(np.unique(X_train[:, col])) for col in categoricals]
-
-    known = {col: set(np.unique(X_train[:, col])) for col in categoricals}
-
-    col_masks = np.column_stack(
-        [
-            (
-                np.isin(X[:, col], list(known[col]))
-                if col in categoricals
-                else np.full(X.shape[0], True)
-            )
-            for col in range(X.shape[1])
-        ]
-    )
-
-    unknown_mask = ~col_masks
+    # replace NAs with string so I can do logic operations
+    categoricals = X_train.select_dtypes(include=["string", "object"]).columns
+    if len(categoricals) > 0:
+        X = X.copy()
+        X.loc[:, categoricals] = X[categoricals].fillna(NA_PLACEHOLDER)
+        X_train = X_train.copy()
+        X_train.loc[:, categoricals] = X_train[categoricals].fillna(NA_PLACEHOLDER)
+    
+    # replace all unseen categories with NA
+    known = {col: set(X_train[col].unique()) for col in categoricals}
+    col_masks = pd.DataFrame({
+        col: X[col].isin(known[col]) if col in categoricals else True
+        for col in X.columns
+    })
 
     X = X.copy()
-    X[unknown_mask] = "NA"
+    for col in categoricals:
+        X.loc[~col_masks[col], col] = NA_PLACEHOLDER
 
-    return model.model.get_embeddings(X, data_source=data_source)
+    try:
+        embeds = model.model.get_embeddings(X, data_source=data_source)
+    except:
+        raise ValueError("Here we go again.")
+
+    return embeds
 
 
 def _add_unknown_row(X_train, y_train):
     # Add a dummy row with unknown values to the training set
-    dummy_row = X_train[0].copy()
-    for i in range(X_train.shape[1]):
-        if isinstance(X_train[0, i], str):
-            dummy_row[i] = "NA"
+    dummy_row = pd.DataFrame([X_train.iloc[0].copy()], columns=X_train.columns)
+    for col in X_train.select_dtypes(include=["string", "object"]):
+        dummy_row[col] = NA_PLACEHOLDER
+    dummy_row = dummy_row.astype(X_train.dtypes.to_dict())
 
-    X_train = np.vstack([X_train, dummy_row])
-    y_train = np.append(y_train, y_train[0])
+    X_train = pd.concat([X_train, dummy_row], ignore_index=True)
+
+
+    dummy_y = pd.Series([y_train.iloc[0]]).astype(y_train.dtypes)
+    y_train = pd.concat([y_train, dummy_y], ignore_index=True)
+
     return X_train, y_train
 
 
@@ -136,8 +151,10 @@ def get_embeddings(
             kf = KFold(n_splits=model.n_fold, shuffle=False)
             embeddings = []
             for train_index, val_index in kf.split(X_train):
-                X_train_fold, X_val_fold = X_train[train_index], X_train[val_index]
-                y_train_fold, _y_val_fold = y_train[train_index], y_train[val_index]
+
+                # converted all of this to pandas
+                X_train_fold, X_val_fold = X_train.iloc[train_index], X_train.iloc[val_index]
+                y_train_fold, _y_val_fold = y_train.iloc[train_index], y_train.iloc[val_index]
                 X_train_fold, y_train_fold = _add_unknown_row(
                     X_train_fold, y_train_fold
                 )
