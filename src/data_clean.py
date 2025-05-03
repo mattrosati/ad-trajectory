@@ -179,11 +179,7 @@ if __name__ == "__main__":
     else:
         merged_data = raw_data
 
-    # cut granularity in MCI for DX
-    merged_data["DX"] = merged_data["DX"].replace(
-        f"[.]*MCI[.]*", "MCI", regex=True
-    )
-
+        
     # replace problematic beta/tau values with maximum values and change to float
     merged_data["ABETA"] = (
         merged_data["ABETA"].replace(f"[<>]", "", regex=True).astype(float)

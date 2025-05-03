@@ -22,10 +22,12 @@ def load_data_for_tabPFN(file_path):
     Returns the data as a pandas DataFrame and the patient IDs by index in new df.
     """
     data = pd.read_csv(file_path, 
-                       # dtype=dtypes, 
                        parse_dates=["EXAMDATE", "EXAMDATE_bl"]
                     )
 
+    for col in data.select_dtypes(include="object"):
+        data[col] = data[col].astype("string")
+    
     # drop rows that do not have target values
     for t in targets:
         data = data[data[t].notna()]
