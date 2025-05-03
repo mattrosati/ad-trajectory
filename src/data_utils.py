@@ -53,15 +53,25 @@ def _get_embed_wrapper(
     X,
     data_source: str,
 ):
-    categoricals = [col for col in range(X_train.shape[1]) if any(isinstance(x, str) for x in X_train[:, col])]
+    categoricals = [
+        col
+        for col in range(X_train.shape[1])
+        if any(isinstance(x, str) for x in X_train[:, col])
+    ]
     known = [set(np.unique(X_train[:, col])) for col in categoricals]
 
     known = {col: set(np.unique(X_train[:, col])) for col in categoricals}
 
-    col_masks = np.column_stack([
-        np.isin(X[:, col], list(known[col])) if col in categoricals else np.full(X.shape[0], True)
-        for col in range(X.shape[1])
-    ])
+    col_masks = np.column_stack(
+        [
+            (
+                np.isin(X[:, col], list(known[col]))
+                if col in categoricals
+                else np.full(X.shape[0], True)
+            )
+            for col in range(X.shape[1])
+        ]
+    )
 
     unknown_mask = ~col_masks
 
@@ -128,7 +138,9 @@ def get_embeddings(
             for train_index, val_index in kf.split(X_train):
                 X_train_fold, X_val_fold = X_train[train_index], X_train[val_index]
                 y_train_fold, _y_val_fold = y_train[train_index], y_train[val_index]
-                X_train_fold, y_train_fold = _add_unknown_row(X_train_fold, y_train_fold)
+                X_train_fold, y_train_fold = _add_unknown_row(
+                    X_train_fold, y_train_fold
+                )
                 model.model.fit(X_train_fold, y_train_fold)
                 embeddings.append(
                     _get_embed_wrapper(
