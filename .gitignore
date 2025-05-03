@@ -1,6 +1,9 @@
 data/
 checkpoints/
 __pycache__/
+.virtual_documents/
+anaconda_projects/
+
 
 .DS_Store
 *.fdb_latexmk
