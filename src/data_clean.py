@@ -220,6 +220,7 @@ if __name__ == "__main__":
         random_state=s,
         stratify=train_ids["DX"],
     )
+    merged_data["DX"] = merged_data["DX"].replace("", pd.NA)
 
     if args.design_features:
         # switch MOCA and MMSE to right skew
