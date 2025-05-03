@@ -7,17 +7,33 @@
 #SBATCH --requeue
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1                        # Run on a single CPU
-#SBATCH --cpus-per-task=5
+#SBATCH --cpus-per-task=8
 #SBATCH --mem=10gb                                 # Job memory request
 #SBATCH --time=05:00:00                          # Time limit hrs:min:sec
 date;hostname;pwd
 
+PREFIX="/home/mr2238/project/conda_envs/ad_traj"
+
 module load miniconda
 cd /home/mr2238/ad-trajectory/
 
-# Install the required packages
-mamba env create -f ~/ad-trajectory/environment.yml
+# this is just brute force env install because getting conda to work with .yml is terrible
+mamba create --prefix "$PREFIX" \
+    python=3.10 \
+    pip \
+    numpy \
+    pandas \
+    matplotlib \
+    tqdm
+conda activate "$PREFIX"
 
-conda activate ad_traj
-bash ./scripts/clean.sh
+# install additional packages
+pip3 install torch torchvision torchaudio
+pip install tabpfn
+conda install conda-forge::transformers
+pip install "tabpfn-extensions[all] @ git+https://github.com/PriorLabs/tabpfn-extensions.git"
+
 conda deactivate
+
+# to delete the environment, run:
+# conda remove -n ad_traj --all
