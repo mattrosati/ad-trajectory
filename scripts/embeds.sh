@@ -23,11 +23,9 @@ conda activate "$ENVIRONMENT"
 
 cd /home/mr2238/ad-trajectory/
 
-# Clean raw data
-bash ./scripts/clean.sh "$PREFIX"
-
-
 # Extract and save embeddings from TabPFN
 python src/embeds_main.py \
     --load-dir $PREFIX/processed/ \
     --save-dir $PREFIX/embeds/
+
+conda deactivate
