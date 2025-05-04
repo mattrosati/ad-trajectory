@@ -166,3 +166,13 @@ id_columns = [
 ]
 
 final_drop_columns = ["VISCODE2", "VISDATE"]
+
+categorical_features = [
+    "PTID",
+    "DX_bl",
+    "PTGENDER",
+    "PTETHCAT",
+    "PTRACCAT",
+    "PTMARRY",
+    "DX"
+]

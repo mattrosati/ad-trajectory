@@ -249,6 +249,8 @@ if __name__ == "__main__":
     print(
         f"Data split into training, validation, and testing sets, {train_data.shape}, {val_data.shape}, {test_data.shape} matrices."
     )
+    for split in ["train", "test", "val"]:
+        print(f"Columns with all NAs in {split}: {merged_data.columns[merged_data.isna().all(axis=0)].values}")
 
     if args.design_features == "yeo-johnson":
         # apply Yeo-Johnson transformation to the features
