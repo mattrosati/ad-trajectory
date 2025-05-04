@@ -1,21 +1,22 @@
-from data_constants import *
+import typing
+import re
+import warnings
+
+import torch
 import numpy as np
 import pandas as pd
+
+from data_constants import *
 
 from tabpfn_extensions import TabPFNRegressor, TabPFNClassifier
 from tabpfn_extensions.embedding import TabPFNEmbedding
 from tabpfn.constants import (
     NA_PLACEHOLDER,
 )
-import typing
-import torch
-from typing import Iterator
 
-# import to figure out what is going on with the data
-from tabpfn.utils import validate_X_predict, _fix_dtypes, _process_text_na_dataframe
-
-from tabpfn.config import ModelInterfaceConfig
-from tabpfn.preprocessing import EnsembleConfig
+def extract_split(s):
+    match = re.search(r'(test|val|train)', s)
+    return match.group(0) if match else None
 
 
 def find_duplicate_columns_by_content(df):
@@ -65,47 +66,17 @@ def _get_embed_wrapper(
     X,
     data_source: str,
 ):
-    # replace NAs with string so I can do logic operations
-    categoricals = X_train.select_dtypes(include=["string", "object"]).columns
-    if len(categoricals) > 0:
-        X = X.copy()
-        X.loc[:, categoricals] = X[categoricals].fillna(NA_PLACEHOLDER)
-        X_train = X_train.copy()
-        X_train.loc[:, categoricals] = X_train[categoricals].fillna(NA_PLACEHOLDER)
-    
-    # replace all unseen categories with NA
-    known = {col: set(X_train[col].unique()) for col in categoricals}
-    col_masks = pd.DataFrame({
-        col: X[col].isin(known[col]) if col in categoricals else True
-        for col in X.columns
-    })
+    # I built this wrapper to figure out why the encoding was giving a warning.
+    # It turns out that scikit-learn has added a warn_on_unknown parameter that will raise a warning
+    # if handle_unknown="ignore" and drop is not None, which is what the OneHotEncoder in TabPFN is doing.
+    # This does not change the behavior, which is what I want. To avoid this warning then I only need to filter it out.
+    # Maybe I could propose a change to the TabPFN code.
 
-    X = X.copy()
-    for col in categoricals:
-        X.loc[~col_masks[col], col] = NA_PLACEHOLDER
-
-    try:
+    # catch and filter out the warning.
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
         embeds = model.model.get_embeddings(X, data_source=data_source)
-    except:
-        raise ValueError("Here we go again.")
-
     return embeds
-
-
-def _add_unknown_row(X_train, y_train):
-    # Add a dummy row with unknown values to the training set
-    dummy_row = pd.DataFrame([X_train.iloc[0].copy()], columns=X_train.columns)
-    for col in X_train.select_dtypes(include=["string", "object"]):
-        dummy_row[col] = NA_PLACEHOLDER
-    dummy_row = dummy_row.astype(X_train.dtypes.to_dict())
-
-    X_train = pd.concat([X_train, dummy_row], ignore_index=True)
-
-
-    dummy_y = pd.Series([y_train.iloc[0]]).astype(y_train.dtypes)
-    y_train = pd.concat([y_train, dummy_y], ignore_index=True)
-
-    return X_train, y_train
 
 
 def get_embeddings(
@@ -135,14 +106,11 @@ def get_embeddings(
         raise ValueError("No model has been set.")
 
     # If no cross-validation is used, train and return embeddings directly
-
     if model.n_fold == 0:
-        X_train, y_train = _add_unknown_row(X_train, y_train)
         model.model.fit(X_train, y_train)
         return _get_embed_wrapper(model, X_train, X, data_source=data_source)
     elif model.n_fold >= 2:
         if data_source == "test":
-            X_train, y_train = _add_unknown_row(X_train, y_train)
             model.model.fit(X_train, y_train)
             return _get_embed_wrapper(model, X_train, X, data_source=data_source)
         else:
@@ -155,9 +123,6 @@ def get_embeddings(
                 # converted all of this to pandas
                 X_train_fold, X_val_fold = X_train.iloc[train_index], X_train.iloc[val_index]
                 y_train_fold, _y_val_fold = y_train.iloc[train_index], y_train.iloc[val_index]
-                X_train_fold, y_train_fold = _add_unknown_row(
-                    X_train_fold, y_train_fold
-                )
                 model.model.fit(X_train_fold, y_train_fold)
                 embeddings.append(
                     _get_embed_wrapper(

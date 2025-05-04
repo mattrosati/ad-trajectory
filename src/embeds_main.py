@@ -1,6 +1,7 @@
 import pandas as pd
 from tabpfn_extensions import TabPFNRegressor, TabPFNClassifier
 from tabpfn_extensions.embedding import TabPFNEmbedding
+from data_constants import categorical_features
 
 import argparse
 import os
@@ -8,11 +9,6 @@ import numpy as np
 import random
 from tqdm import tqdm
 import warnings
-warnings.filterwarnings(
-    "ignore",
-    category=UserWarning,
-    message=r"Found unknown categories*"
-)
 
 
 # from tabpfn.config import ModelInterfaceConfig # uncomment this if config necessary
@@ -55,12 +51,6 @@ if __name__ == "__main__":
     np.random.seed(s)
     random.seed(s)
 
-    # config = ModelInterfaceConfig(
-    #     FEATURE_SHIFT_METHOD = None,
-    #     CLASS_SHIFT_METHOD = None
-    # ) # comment this out
-    # categorical_features = [0,2,4,6,7,8]
-
     # load the dataset
     # average ensembles before concat
     for f in os.listdir(args.load_dir):
@@ -71,37 +61,26 @@ if __name__ == "__main__":
             # fit the model and extract the embeddings
             y = data[targets]
             x = data.drop(columns=targets)
+
+            # tell the model what features are categorical
+            categorical_features_ = [x.columns.get_loc(col) for col in categorical_features if col in x.columns]
+
             vecs = []
             for t in tqdm(targets):
-                # TODO: store the preprocessed data for input to TabPFN
-                # most likely will require a couple of lines of the sort:
-                # from tabpfn.utils import ModelInterfaceConfig
-                # from tabpfn import TabPFNClassifier
-                # config = ModelInterfaceConfig(
-                #     shift_labels=False,       # ❌ don't shift class labels
-                #     permute_features=False,   # ❌ don't shuffle feature columns
-                #     normalize_by_median=True  # ✅ (optional) still normalize numerics
-                # )
-                # model = TabPFNClassifier(interface_config=config)
-                # model.fit(X_train, y_train)
-                # x = validate_X_predict(x, reg)
-                # x = _fix_dtypes(x, cat_indices=reg.categorical_features_indices)
-                # tran = reg.preprocessor_.transform(x)
-
                 # make model for each target
                 # if the target is a classification task, use TabPFNClassifier
                 # if the target is a regression task, use TabPFNRegressor
                 if t == "DX":
                     clf = TabPFNClassifier(random_state=s, 
                         # inference_config=config, 
-                        # categorical_features_indices=categorical_features
+                        categorical_features_indices=categorical_features_
                         )
                     clf.feature_names_in_ = x.columns
                     embedding = TabPFNEmbedding(tabpfn_clf=clf, n_fold=args.kfolds)
                 else:
                     reg = TabPFNRegressor(random_state=s, 
                         # inference_config=config, 
-                        # categorical_features_indices=categorical_features
+                        categorical_features_indices=categorical_features_
                         )
                     reg.feature_names_in_ = x.columns
                     embedding = TabPFNEmbedding(tabpfn_reg=reg, n_fold=args.kfolds)
