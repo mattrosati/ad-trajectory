@@ -1,20 +1,22 @@
-import typing
 import re
 import warnings
+from typing import Literal
 
-import torch
 import numpy as np
 import pandas as pd
 
-from typing import Literal
+from sklearn.base import clone
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
 
-from data_constants import *
-
-from tabpfn_extensions import TabPFNRegressor, TabPFNClassifier
 from tabpfn_extensions.embedding import TabPFNEmbedding
 from tabpfn.constants import (
     NA_PLACEHOLDER,
 )
+
+from tabpfn.utils import validate_X_predict, _fix_dtypes
+
+from data_constants import *
 
 def extract_split(s):
     match = re.search(r'(test|val|train)', s)
