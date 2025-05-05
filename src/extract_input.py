@@ -22,7 +22,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.utils.validation import check_is_fitted
 
 
-from data_utils import load_data_for_tabPFN
+from data_utils import *
 from data_constants import targets, categorical_features
 from sklearn.pipeline import Pipeline
 
@@ -226,7 +226,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--save-dir",
         type=str,
-        default="data/embeddings",
+        default="data/reconstructed",
         help="Directory to save the reconstruction targets to",
     )
     parser.add_argument(

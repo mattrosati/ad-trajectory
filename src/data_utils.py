@@ -6,6 +6,8 @@ import torch
 import numpy as np
 import pandas as pd
 
+from typing import Literal
+
 from data_constants import *
 
 from tabpfn_extensions import TabPFNRegressor, TabPFNClassifier
@@ -135,3 +137,188 @@ def get_embeddings(
             return np.concatenate(embeddings, axis=1)
     else:
         raise ValueError("n_fold must be greater than 1.")
+
+
+# ----- transformer functions -----
+    
+def reverse_column_transformer_manual(X_transformed, ct, original_feature_count):
+    """
+    Reverse a ColumnTransformer with a reversible 'encoder' and identity 'remainder'.
+    
+    Assumes:
+        - X_transformed is output from ct.transform(X)
+        - ct.transformers_ includes actual fitted transformers and column indices
+    """
+    X_reconstructed = np.empty((X_transformed.shape[0], original_feature_count), dtype=object)
+
+    current_col = 0
+
+    for name, transformer, cols in ct.transformers_:
+        if transformer == 'drop':
+            continue
+        
+        if name == 'remainder':
+            # identity passthrough — just copy values
+            n_cols = len(cols)
+            X_reconstructed[:, cols] = X_transformed[:, current_col:current_col + n_cols]
+            current_col += n_cols
+            continue
+
+        # reverse-transform encoder
+        if hasattr(transformer, 'inverse_transform'):
+            n_cols = len(cols)
+            transformed_block = X_transformed[:, current_col:current_col + n_cols]
+            try:
+                reversed_block = transformer.inverse_transform(transformed_block)
+                X_reconstructed[:, cols] = reversed_block
+            except Exception as e:
+                raise RuntimeError(f"Could not reverse-transform '{name}': {e}")
+            current_col += n_cols
+        else:
+            raise RuntimeError(f"Transformer '{name}' does not support inverse_transform")
+
+    return X_reconstructed
+
+def safe_inverse_transform(step, X):
+    """Recursively inverse-transform a step, skipping SimpleImputer failures."""
+    from sklearn.pipeline import Pipeline
+    from sklearn.impute import SimpleImputer
+
+    if isinstance(step, SimpleImputer):
+        return X  # skip
+    elif isinstance(step, Pipeline):
+        for sub_name, sub_step in reversed(step.steps):
+            if isinstance(sub_step, SimpleImputer):
+                continue
+            if hasattr(sub_step, 'inverse_transform'):
+                try:
+                    X = sub_step.inverse_transform(X)
+                except Exception:
+                    pass
+        return X
+    elif hasattr(step, 'inverse_transform'):
+        try:
+            return step.inverse_transform(X)
+        except Exception:
+            return X
+    else:
+        return X
+
+def reverse_scale_transformer(ct, X_transformed):
+    """
+    Partially reverse a ColumnTransformer:
+    - Fully reverse 'cats' passthrough block.
+    - Reverse 'feat_transform' block, skipping SimpleImputer steps.
+    """
+    all_cols = [col for _, _, cols in ct.transformers if cols is not None for col in cols]
+    max_col = len(all_cols)
+    print(max_col)
+    n_rows, n_cols = X_transformed.shape
+    full_recon = np.empty((n_rows, max_col), dtype=np.float64)
+
+    for name, _, cols in ct.transformers_:
+        if name == "cats":
+            cats_columns = cols
+        elif name == 'feat_transform':
+            feat_columns = cols
+
+    # 1. Passthrough block (first 10 columns)
+    cat_block = X_transformed[:, cats_columns]
+    full_recon[:, cats_columns] = cat_block
+
+    # 2. Feat_transform block
+    feat_block = X_transformed[:, feat_columns]
+    pipeline: Pipeline = ct.named_transformers_['feat_transform']
+
+    # Manually reverse-transform each step except imputers
+    X_step = feat_block
+    for name, step in reversed(pipeline.steps):
+        X_step = safe_inverse_transform(step, X_step)
+
+    full_recon[:, feat_columns] = X_step
+    return full_recon
+
+
+
+def reverse_transform(column_transformer, X_transformed, original_input_shape):
+    """
+    Manually reverses a ColumnTransformer with one-hot and passthrough parts.
+    """
+    # Get transformers
+    onehot_step = column_transformer.named_transformers_['one_hot_encoder']
+    onehot_indices = column_transformer.transformers_[0][2]  # [0, 1, ..., 9]
+
+    # Inverse transform the one-hot encoded part
+    onehot_end = onehot_step.transform(np.zeros((1, len(onehot_indices)))).shape[1]
+    onehot_part = X_transformed[:, :onehot_end]
+    onehot_inverse = onehot_step.inverse_transform(onehot_part)
+
+    # Get passthrough part
+    n_total = X_transformed.shape[1]
+    passthrough_part = X_transformed[:, onehot_end:]
+
+    # Combine both parts
+    full = np.empty((X_transformed.shape[0], original_input_shape[1]), dtype=object)
+    full[:, onehot_indices] = onehot_inverse
+
+    # Determine passthrough indices
+    passthrough_indices = [
+        i for i in range(original_input_shape[1]) if i not in onehot_indices
+    ]
+    full[:, passthrough_indices] = passthrough_part
+
+    return full
+
+
+def input_processing(
+        model,
+        X: np.ndarray,
+        mode :  Literal[
+            "refit",
+            "transform",
+        ] = "transform",
+    ):
+    # given a model and inputs, this will return transformed inputs and pipeline.
+
+    # this first section sets up the categoricals and continuous vars.
+    # note that the categorical features will move to the front.
+    X = X.copy()
+    X = validate_X_predict(X, model)
+    X = _fix_dtypes(X, cat_indices=model.categorical_features_indices)
+    X = model.preprocessor_.transform(X)
+
+    shuffle_idx = [idx for i in [col for _, _, col in model.preprocessor_.transformers_] for idx in i]
+    categorical_features = [i for i in range(len(shuffle_idx)) if shuffle_idx[i] in model.categorical_features_indices]
+    
+    # this second section runs the default tabPFN regression one-hot encoding and normalization schemas.
+    # I will spawn models here with only one worker to be deterministic, but this could will work with >1.
+    executor = model.executor_
+    for i, preprocessor in enumerate(executor.preprocessors):
+        if mode == "transform":
+            # transform to get input
+            X = preprocessor.transform(X).X
+        elif mode == "refit":
+            X, categorical_features = preprocessor.fit_transform(X, categorical_features)
+    
+    if len(executor.preprocessors) != 1:
+        warnings.warn("Multiple ensembles initialized in model. Only grabbing first pipeline.", UserWarning)
+
+    pipeline = executor.preprocessors[0]
+    print(model.preprocessor_)
+
+    return X, pipeline
+
+def remake_columntransformer(ct, new_indices):
+    new_transformers = []
+    for name, transformer, _ in ct.transformers:
+        updated_cols = new_indices[name]
+        if updated_cols is not None:
+            # Clone the transformer if needed
+            if isinstance(transformer, str):
+                new_transformers.append((name, transformer, updated_cols))
+            else:
+                new_transformers.append((name, clone(transformer), updated_cols))
+
+    ct_new = ColumnTransformer(new_transformers, remainder='drop')
+    return ct_new
+
