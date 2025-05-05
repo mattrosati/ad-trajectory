@@ -88,6 +88,8 @@ raw_data_drop_columns = [
     "update_stamp",
     "M",
     "Month",
+    "PIB",
+    "PIB_bl",
 ]
 
 vitals_drop_columns = [
@@ -163,16 +165,20 @@ id_columns = [
     "VISCODE",
     "COLPROT",
     "ORIGPROT",
+    "PTID",
 ]
 
 final_drop_columns = ["VISCODE2", "VISDATE"]
 
 categorical_features = [
-    "PTID",
     "DX_bl",
     "PTGENDER",
     "PTETHCAT",
     "PTRACCAT",
     "PTMARRY",
-    "DX"
+    "DX",
+    "APOE4",
+    "VSWTUNIT",
+    "VSTMPSRC",
+    "VSTMPUNT",
 ]

@@ -73,9 +73,12 @@ def _get_embed_wrapper(
     # Maybe I could propose a change to the TabPFN code.
 
     # catch and filter out the warning.
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", UserWarning)
-        embeds = model.model.get_embeddings(X, data_source=data_source)
+    # with warnings.catch_warnings():
+    #     warnings.simplefilter("ignore", UserWarning)
+    # it turns out this was just a problem with PIB and the preprocessing which assumed this was a categorical var
+    # data cleaning could have been better
+
+    embeds = model.model.get_embeddings(X, data_source=data_source)
     return embeds
 
 
