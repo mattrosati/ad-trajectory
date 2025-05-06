@@ -3,7 +3,7 @@
 #SBATCH --output env_install.log                # Output log file
 #SBATCH --mail-type=NONE                            # Mail events (NONE, BEGIN, END, FAIL, ALL)
 #SBATCH --mail-user=<USER>@gmail.com               # Email address to send status updates to
-#SBATCH --partition day                            # Train on private partition
+#SBATCH --partition scavenge                            # Train on private partition
 #SBATCH --requeue
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1                        # Run on a single CPU
@@ -13,6 +13,8 @@
 date;hostname;pwd
 
 PREFIX="/home/mr2238/project/conda_envs/ad_traj"
+
+module reset
 
 module load miniconda
 cd /home/mr2238/ad-trajectory/
@@ -29,9 +31,10 @@ conda activate "$PREFIX"
 
 # install additional packages
 pip3 install torch torchvision torchaudio
+pip install accelerate datasets transformers
 pip install tabpfn
-conda install conda-forge::transformers
 pip install "tabpfn-extensions[all] @ git+https://github.com/PriorLabs/tabpfn-extensions.git"
+pip install wandb
 
 conda deactivate
 

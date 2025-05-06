@@ -1,0 +1,4 @@
+/home/mr2238/ad-trajectory/configs/gp_config_base.json
+/home/mr2238/ad-trajectory/configs/gp_config_vitals.json
+/home/mr2238/ad-trajectory/configs/gp_config_vitals_log.json
+/home/mr2238/ad-trajectory/configs/gp_config_vitals_yeo-johnson.json

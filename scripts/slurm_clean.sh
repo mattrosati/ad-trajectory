@@ -15,6 +15,8 @@ date;hostname;pwd
 PREFIX="/home/mr2238/palmer_scratch/adni" # path to data directory
 ENVIRONMENT="/home/mr2238/project/conda_envs/ad_traj" # path to conda environment
 
+module reset
+
 module load miniconda
 conda activate "$ENVIRONMENT"
 
