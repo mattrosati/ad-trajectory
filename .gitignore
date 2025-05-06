@@ -3,7 +3,7 @@ checkpoints/
 __pycache__/
 .virtual_documents/
 anaconda_projects/
-
+wandb/
 
 .DS_Store
 *.fdb_latexmk
