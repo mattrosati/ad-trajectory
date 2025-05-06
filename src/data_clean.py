@@ -229,12 +229,11 @@ if __name__ == "__main__":
         stratify=train_ids["DX"],
     )
 
-    if args.design_features:
-        # switch MOCA and MMSE to right skew
-        merged_data["MMSE"] = 30 - merged_data["MMSE"]
-        merged_data["MOCA"] = 30 - merged_data["MOCA"]
-        merged_data["MMSE_bl"] = 30 - merged_data["MMSE_bl"]
-        merged_data["MOCA_bl"] = 30 - merged_data["MOCA_bl"]
+    # changing cognitive scores to right skew
+    merged_data["MMSE"] = 30 - merged_data["MMSE"]
+    merged_data["MOCA"] = 30 - merged_data["MOCA"]
+    merged_data["MMSE_bl"] = 30 - merged_data["MMSE_bl"]
+    merged_data["MOCA_bl"] = 30 - merged_data["MOCA_bl"]
 
     if args.design_features == "log":
         # select the columns to apply the tranformation to

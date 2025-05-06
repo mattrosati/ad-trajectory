@@ -31,8 +31,6 @@ from tabpfn.config import ModelInterfaceConfig
 from tabpfn.preprocessing import EnsembleConfig, default_regressor_preprocessor_configs, fit_preprocessing
 from tabpfn.model.preprocessing import EncodeCategoricalFeaturesStep, ReshapeFeatureDistributionsStep
 
-from tabpfn.utils import validate_X_predict, _fix_dtypes, _process_text_na_dataframe, infer_random_state, infer_categorical_features
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="VAE reconstruction targets.")
     parser.add_argument(
@@ -91,7 +89,6 @@ if __name__ == "__main__":
 
             model.fit(x, y)
 
-            # TODO: enforce right categorical vars even in embed extraction
             # hacky way to enforce correct transformations of categorical variables
             pipeline = model.executor_.preprocessors[0]
             new_idx = {"cats": categorical_features_, "feat_transform": [i for i in range(x.shape[1]) if i not in categorical_features_]}

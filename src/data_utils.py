@@ -1,6 +1,7 @@
 import re
 import warnings
 from typing import Literal
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -10,6 +11,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 
 from tabpfn_extensions.embedding import TabPFNEmbedding
+from tabpfn_extensions import TabPFNRegressor
 from tabpfn.constants import (
     NA_PLACEHOLDER,
 )
@@ -77,12 +79,13 @@ def _get_embed_wrapper(
     # Maybe I could propose a change to the TabPFN code.
 
     # catch and filter out the warning.
-    # with warnings.catch_warnings():
-    #     warnings.simplefilter("ignore", UserWarning)
     # it turns out this was just a problem with PIB and the preprocessing which assumed this was a categorical var
     # data cleaning could have been better
 
-    embeds = model.model.get_embeddings(X, data_source=data_source)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        embeds = model.model.get_embeddings(X, data_source="test")
+
     return embeds
 
 
@@ -131,11 +134,10 @@ def get_embeddings(
                 X_train_fold, X_val_fold = X_train.iloc[train_index], X_train.iloc[val_index]
                 y_train_fold, _y_val_fold = y_train.iloc[train_index], y_train.iloc[val_index]
                 model.model.fit(X_train_fold, y_train_fold)
-                embeddings.append(
-                    _get_embed_wrapper(
+                e =  _get_embed_wrapper(
                         model, X_train_fold, X_val_fold, data_source=data_source
-                    ),
-                )
+                    )
+                embeddings.append(e)
             return np.concatenate(embeddings, axis=1)
     else:
         raise ValueError("n_fold must be greater than 1.")
